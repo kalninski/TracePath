@@ -42,7 +42,7 @@ public class ControlPoint {
 		setV2();
 //		setV1_SecondVersion();
 //		setV2_SecondVersion();
-		getValuesOfCurve();
+//		getValuesOfCurve();
 		correctParameter();
 //		setV1_SecondVersion();
 //		setV2_SecondVersion();
@@ -175,6 +175,8 @@ public class ControlPoint {
 	
 		return tg.normalize();
 	}
+		
+
 	
 	public Vector getTangent2() {
 		Vector tg = new Vector(0, 0);
@@ -211,6 +213,8 @@ public class ControlPoint {
 		
 		return tg.normalize();
 	}
+	
+
 	
 	public double getC11() {
 		int sizeParamT = parameterT.length;
@@ -313,14 +317,14 @@ public class ControlPoint {
 		double x1 = getX1();
 		double x2 = getX2();
 		double alpha1;
-		double epsilon = 1e-10;
+		double epsilon = 1e-15;
 		Vector t1 = getTangent1();
 		Matrix num = new Matrix(x1, matrix.c12, x2, matrix.c22);
 		double numerator = num.determinant();
 		double denominator = matrix.determinant();
 		if(Math.abs(denominator) < epsilon) {
 			
-		//	alpha1 = 0;
+
 			t1 = Vector.multiplyByScaler(1, t1);
 			
 		}else {
@@ -376,7 +380,7 @@ public class ControlPoint {
 		double x1 = getX1();
 		double x2 = getX2();
 		double alpha1;
-		double epsilon = 1e-10;
+		double epsilon = 1e-15;
 		Vector t2 = getTangent2();
 		Matrix num = new Matrix(matrix.c11, x1, matrix.c21, x2);
 		double numerator = num.determinant();
@@ -384,6 +388,7 @@ public class ControlPoint {
 		if(Math.abs(denominator) < epsilon) {
 			
 		//	alpha1 = 0;
+		
 			
 			t2 = Vector.multiplyByScaler(1, t2);
 			

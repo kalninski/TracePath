@@ -34,15 +34,17 @@ public class Main {
 
 
 		Sine s = new Sine(5,4);
-//		Cosine c = new Cosine(1,1);
+		Cosine c = new Cosine(1,1);
 //		Tangent tg = new Tangent(1,1);
 //		GaussDistribution gd = new GaussDistribution(0.4, 0);
 //		System.out.println(Arrays.toString(gd.xC) + "\n" + Arrays.toString(gd.yC));
 //		System.out.println(Arrays.toString(s.xActualVal) + "\n" + Arrays.toString(s.yActualVal));
 //		s.createValues();
-		GenerateXML xml = new GenerateXML(s);
+		GenerateXML xml = new GenerateXML(c);
 //		xml.createXML();
-		xml.createXML(s, 0, s.yActualVal.length - 1);
+//		xml.createXML(c, 0, c.yActualVal.length - 1);
+		xml.createXML1(c, 0, c.yActualVal.length - 1, xml.root);
+		xml.iterateTree(xml.root);
 		System.out.println(xml.svg);
 
 
@@ -56,7 +58,7 @@ public class Main {
 		String svg = String.format(svg1, xml.svg);
 		
 		try {
-			FileWriter w = new FileWriter(folder + sep + "line98.svg");
+			FileWriter w = new FileWriter(folder + sep + "line12345.svg");
 			w.write(svg);
 			w.close();
 //			System.out.println(w.getEncoding());

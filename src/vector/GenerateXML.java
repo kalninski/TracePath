@@ -12,6 +12,7 @@ public class GenerateXML {
 	double[] errorArr;
 	int start;
 	int end;
+	Node root;
 	
 	StringBuilder svg = new StringBuilder();
 	public String restXML =  "\" stroke=\"black\" fill=\"none\" stroke-width=\"2\"/></svg>";
@@ -23,11 +24,19 @@ public class GenerateXML {
 		this.f = f;
 		this.functionArrY = f.yActualVal;
 		this.functionArrX = f.xActualVal;
+		root = new Node();
+		
+		root.cp = new ControlPoint(f, start, end);
+		System.out.println(root.toString());
+		createXML1(f, start, end, root);
+		iterateTree(root);
+		
 		
 	}
 	
 	public void createXML(Function f, int start, int end) {
 		ControlPoint cp = new ControlPoint(f, start, end);
+
 //		cp.getValuesOfCurve();
 		String points;
 		int e = cp.getErrorIndex(f);
@@ -48,6 +57,67 @@ public class GenerateXML {
 			}
 			svg.append(points);
 //			System.out.println(points);
+		}
+	}
+	
+	
+	
+	public void createXML1(Function f, int start, int end, Node node) {
+		
+		node.cp = new ControlPoint(f, start, end);
+		
+		int e = node.cp.getErrorIndex(f);
+		String points;
+		
+		if(node.cp.maxError > 1) {
+			
+			Node left = new Node();
+			node.left  = left;
+			
+			createXML1(f, start, start + e, node.left);
+			
+			Node right = new Node();
+			node.right = right;
+			createXML1(f, start + e, end, node.right);
+		}
+
+	}
+	
+	
+	public void iterateTree(Node node) {
+		setMiddleToZero(node);
+		String points;
+		
+		
+		if(node.left == null || node.right == null) {
+			System.out.println(node.toString());
+			points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[start], functionArrY[start], node.cp.v1.x, node.cp.v1.y, node.cp.v2.x, node.cp.v2.y, functionArrX[end], functionArrY[end]);
+			svg.append(points);
+		}else {
+			iterateTree(node.left);
+			iterateTree(node.right);
+		}
+	}
+	
+	public void setMiddleToZero(Node node) {
+		if(node.left != null && node.right != null && (node.left.cp.end - node.left.cp.start <= 5) && (node.right.cp.end - node.right.cp.start) <= 5) {
+			Vector leftV2 = node.left.cp.v2;
+			Vector leftV3 = node.left.cp.v3;
+			double dXl = leftV2.x - leftV3.x;
+			double dYl = leftV2.y - leftV3.y;
+			double distL = Math.sqrt(Math.pow(dXl, 2) + Math.pow(dYl, 2));
+			Vector t1 = new Vector((-1) * distL, 0);
+			node.left.cp.v2 = Vector.add2Vectors(node.left.cp.v3, t1);
+			
+			Vector rightV1 = node.right.cp.v1;
+			Vector rightV0 = node.right.cp.v0;
+			double dXr = rightV1.x - rightV0.x;
+			double dYr = rightV1.y - rightV0.y;
+			double distR = Math.sqrt(Math.pow(dXr, 2) + Math.pow(dYr, 2));
+			Vector t2 = new Vector(distR, 0);
+			node.right.cp.v1 = Vector.add2Vectors(node.right.cp.v0, t2);
+			
+			
 		}
 	}
 	

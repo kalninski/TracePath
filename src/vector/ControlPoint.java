@@ -1,6 +1,7 @@
 package vector;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import statistics.Function;
 import java.io.*;
@@ -22,6 +23,7 @@ public class ControlPoint {
 	int start;
 	int end;
 	Function f;
+	String points;
 	
 	
 	public ControlPoint(Function f, int start, int end) {
@@ -35,7 +37,7 @@ public class ControlPoint {
 		this.end = end;
 		this.v0 = new Vector(functionX[start], functionY[start]);
 		this.v3 = new Vector(functionX[end], functionY[end]);
-		initialParameterT1();
+		initialParameterT();
 		//System.out.println("T parameter array = " + Arrays.toString(parameterT));
 		parameterTXT("NEWTON_RAPSON");
 		setV1();
@@ -49,6 +51,7 @@ public class ControlPoint {
 		setV1();
 		setV2();
 		getValuesOfCurve();
+		this.points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionX[start], functionY[start], this.v1.x, this.v1.y, this.v2.x, this.v2.y, functionX[end], functionY[end]);
 //		System.out.println("COSNTRUCTOR polynomialY " + Arrays.toString(polynomialY));
 //		System.out.println("COSNTRUCTOR polynomialX " + Arrays.toString(polynomialX));
 		
@@ -552,6 +555,40 @@ public class ControlPoint {
 			}
 			parameterT[i] = t;
 		}
+	}
+	
+	//Use tangents of another control point
+	public void setInnerPointsLeft(ControlPoint cp) {
+		Vector t1 = new Vector();
+
+		t1 = Vector.subtract2Vectors(cp.v1, cp.v0);
+//		t2 = Vector.subtract2Vectors(cp.v3, cp.v2);
+		t1 = Vector.multiplyByScaler(-1, t1);
+//		t2 = Vector.multiplyByScaler(-1, t2);
+		t1 = t1.normalize();
+//		t2 = t2.normalize();
+		this.v1 = Vector.add2Vectors(this.v0, t1);
+//		this.v2 = Vector.add2Vectors(this.v3, t2);
+		this.points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionX[start], functionY[start], this.v1.x, this.v1.y, this.v2.x, this.v2.y, functionX[end], functionY[end]);
+	}
+	
+	//Use tangents of another control point
+	public void setInnerPoints(ControlPoint cp) {
+		Vector t1 = new Vector();
+		Vector t2 = new Vector();
+		t1 = Vector.subtract2Vectors(cp.v1, cp.v0);
+		t2 = Vector.subtract2Vectors(cp.v3, cp.v2);
+		t1 = Vector.multiplyByScaler(-1, t1);
+		t2 = Vector.multiplyByScaler(-1, t2);
+		t1 = t1.normalize();
+		t2 = t2.normalize();
+		this.v1 = Vector.add2Vectors(this.v0, t1);
+		this.v2 = Vector.add2Vectors(this.v3, t2);
+		this.points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionX[start], functionY[start], this.v1.x, this.v1.y, this.v2.x, this.v2.y, functionX[end], functionY[end]);
+	}
+	
+	public void changeControlPoint(ControlPoint cp, Vector v) {
+		Vector t = Vector.subtract2Vectors(v, cp.v0);
 	}
 
 	

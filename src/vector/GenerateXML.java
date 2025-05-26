@@ -84,20 +84,7 @@ public class GenerateXML {
 	}
 	
 	
-	public void iterateTree(Node node) {
-		setMiddleToZero(node);
-		String points;
-		
-		
-		if(node.left == null || node.right == null) {
-			System.out.println(node.toString());
-			points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[start], functionArrY[start], node.cp.v1.x, node.cp.v1.y, node.cp.v2.x, node.cp.v2.y, functionArrX[end], functionArrY[end]);
-			svg.append(points);
-		}else {
-			iterateTree(node.left);
-			iterateTree(node.right);
-		}
-	}
+
 	
 	public void setMiddleToZero(Node node) {
 		if(node.left != null && node.right != null && (node.left.cp.end - node.left.cp.start <= 5) && (node.right.cp.end - node.right.cp.start) <= 5) {

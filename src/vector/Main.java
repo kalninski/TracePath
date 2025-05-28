@@ -41,10 +41,8 @@ public class Main {
 //		System.out.println(Arrays.toString(s.xActualVal) + "\n" + Arrays.toString(s.yActualVal));
 //		s.createValues();
 		GenerateXML xml = new GenerateXML(c);
-//		xml.createXML();
-//		xml.createXML(c, 0, c.yActualVal.length - 1);
-		xml.createXML1(c, 0, c.yActualVal.length - 1, xml.root);
-		xml.iterateTree(xml.root);
+		xml.iterate(xml.root);
+		xml.continuityConstraintG1();
 		System.out.println(xml.svg);
 
 

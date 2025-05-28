@@ -139,7 +139,7 @@ public class ControlPoint {
 	public Vector getTangent1() {
 		double count = Math.min(5, end - start - 1);
 		if(count <= 1) {
-			System.out.println("Count is less than 1 " + (start + 1 < functionY.length));
+//			System.out.println("Count is less than 1 " + (start + 1 < functionY.length));
 			return (start + 1 < functionY.length) ? new Vector(functionX[start + 1] - functionX[start], functionY[start + 1] - functionY[start]) : new Vector(1, 0);
 		}
 		Vector tg = new Vector(0, 0);
@@ -339,40 +339,7 @@ public class ControlPoint {
 		v1 = Vector.add2Vectors(v0, t1);
 	//	System.out.println("set V1 = " + v1.toString());
 	}
-	//Second version!!!!!!
-	public void setV1_SecondVersion() {
-		Matrix matrix = new Matrix();
-		matrix.c11 = getC11();
-		matrix.c12 = getC12C21();
-		matrix.c21 = matrix.c12;
-		matrix.c22 = getC22();
-		double x1 = getX1();
-		double x2 = getX2();
-		double alpha1;
-		double epsilon = 1e-10;
-		Vector t1 = getTangent1();
-		Matrix num = new Matrix(x1, matrix.c12, x2, matrix.c22);
-		double numerator = num.determinant();
-		double denominator = matrix.determinant();
-		if(Math.abs(denominator) < epsilon) {
-			
-		//	alpha1 = 0;
-			double dy = f.getDerivative(start);
-			Vector ddx = new Vector(1, dy);
-			t1 = ddx.normalize();
-//			Vector tOther = getOneValueOfCurveFirstDerivative(0);
-//			t1 = tOther.normalize();
-//			t1 = Vector.multiplyByScaler(1, t1);
-			
-		}else {
-			
-			alpha1 = numerator/denominator;
-			t1 = Vector.multiplyByScaler(alpha1, t1);
-		
-		}
-		v1 = Vector.add2Vectors(v0, t1);
-	//	System.out.println("set V1 = " + v1.toString());
-	}
+	
 	
 	public void setV2() {
 		Matrix matrix = new Matrix();
@@ -404,40 +371,7 @@ public class ControlPoint {
 		v2 = Vector.add2Vectors(v3, t2);
 	}
 	
-	//SECOND_VERSION!!!!!
-	public void setV2_SecondVersion() {
-		Matrix matrix = new Matrix();
-		matrix.c11 = getC11();
-		matrix.c12 = getC12C21();
-		matrix.c21 = matrix.c12;
-		matrix.c22 = getC22();
-		double x1 = getX1();
-		double x2 = getX2();
-		double alpha1;
-		double epsilon = 1e-10;
-		Vector t2 = getTangent2();
-		Matrix num = new Matrix(matrix.c11, x1, matrix.c21, x2);
-		double numerator = num.determinant();
-		double denominator = matrix.determinant();
-		if(Math.abs(denominator) < epsilon) {
-			
-		//	alpha1 = 0;
-			double dy = f.getDerivative(end);
-			Vector ddx = new Vector(-1, (-1 * dy));
-			t2 = ddx.normalize();
-			
-//			Vector tOther = getOneValueOfCurveFirstDerivative(1);
-//			t2 = tOther.normalize();
-//			t2 = Vector.multiplyByScaler(1, t2);
-			
-		}else {
-			
-			alpha1 = numerator/denominator;
-			t2 = Vector.multiplyByScaler(alpha1, t2);
-		}
-		
-		v2 = Vector.add2Vectors(v3, t2);
-	}
+
 	
 	
 	public void getValuesOfCurve() {
@@ -453,7 +387,7 @@ public class ControlPoint {
 	
 	public void parameterTXT(String name) {
 		String sep = File.separator;
-		File f = new File("C:" + sep + "Users" + sep + "Toms" + sep + "Desktop" + sep + "ImageEXPERIMENTS" + sep  + name + ".txt");
+		File f = new File("/Users/maksla/Desktop" + sep  + name + ".txt");
 		
 		try {
 			if(!f.equals(f)) {
@@ -557,6 +491,7 @@ public class ControlPoint {
 		}
 	}
 	
+
 	//Use tangents of another control point
 	public void setInnerPointsLeft(ControlPoint cp) {
 		Vector t1 = new Vector();
@@ -589,6 +524,64 @@ public class ControlPoint {
 	
 	public void changeControlPoint(ControlPoint cp, Vector v) {
 		Vector t = Vector.subtract2Vectors(v, cp.v0);
+	}
+
+
+	public double getMagnitude() {
+		Vector dV = Vector.subtract2Vectors(v3, v0);
+		double dX = dV.x;
+		double dY = dV.y;
+		double distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
+		return distance;
+	}
+	
+	//CONTINUITY CONSTRAINT FOR SUB-CURVES OS SAMLL LENGHT -> THE V1 VECTOR GETS ADJUSTED TO THE V2 TANGENT OF THE PREVIOUS SUB-CURVE
+	public void setV1fromPrev(ControlPoint cp) {
+		
+		Vector t2 = getOneValueOfCurveFirstDerivativeLast(1.0, cp);//tangent of the previous sub-curve
+
+		
+
+		t2 = t2.normalize();
+		Vector t1 = Vector.subtract2Vectors(this.v1, this.v0);//the vector to be adjusted to the last one
+		double lenT1 = Vector.vecMagnitude(t1);
+		t1 = Vector.multiplyByScaler(lenT1, t2);
+		
+		this.v1 = Vector.add2Vectors(this.v0, t1);
+		
+	}
+	//WTF
+	public void setV2fromNext(ControlPoint cp) {
+		Vector t1 = getOneValueOfCurveFirstDerivativeLast(0.0,cp);
+
+		
+
+		t1 = t1.normalize();
+		
+		Vector t2 = Vector.subtract2Vectors(this.v3, this.v2);
+		double lenT2 = Vector.vecMagnitude(t2);
+		t2 = Vector.multiplyByScaler(lenT2, t1);
+		t2 = Vector.multiplyByScaler((-1), t2);//only in this situation with adjusting the second inner point V2 the tangent has to be multiplied by -1 , because for all other cases with continuity contraints
+												//the tangents always point from v0 to v1 to v2 to v3 so the derivative can remain the same but since adjusting v2 from the v1 tangenent from the next curve
+												//you have to go in the opposite direction relative to how the vectors point generally ( from -inf to +inf on x axis along the function)
+												//If this comment is not making sense
+
+		this.v2 = Vector.add2Vectors(this.v3, t2);
+	}
+	//WTF
+	public Vector getOneValueOfCurveFirstDerivativeLast(double t,ControlPoint cp) {
+		double coeff0 = Math.pow((1-t), 2) * 3;
+		double coeff1 = (1-t) * t * 6;
+		double coeff2 = Math.pow(t, 2) * 3;
+		Vector deltaV0 = Vector.subtract2Vectors(cp.v1, cp.v0);
+		Vector deltaV1 = Vector.subtract2Vectors(cp.v2, cp.v1);
+		Vector deltaV2 = Vector.subtract2Vectors(cp.v3, cp.v2);
+		Vector v0New = Vector.multiplyByScaler(coeff0, deltaV0);
+		Vector v1New = Vector.multiplyByScaler(coeff1, deltaV1);
+		Vector v2New = Vector.multiplyByScaler(coeff2, deltaV2);
+		Vector sum = Vector.add3Vectors(v0New, v1New, v2New);
+		return sum;
+
 	}
 
 	

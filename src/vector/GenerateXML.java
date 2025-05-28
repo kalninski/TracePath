@@ -2,6 +2,7 @@ package vector;
 
 import java.util.Locale;
 import statistics.Function;
+import java.util.*;
 
 
 public class GenerateXML {
@@ -13,6 +14,8 @@ public class GenerateXML {
 	int start;
 	int end;
 	Node root;
+	ArrayList<ControlPoint> controlPoints = new ArrayList<ControlPoint>();
+	
 	
 	StringBuilder svg = new StringBuilder();
 	public String restXML =  "\" stroke=\"black\" fill=\"none\" stroke-width=\"2\"/></svg>";
@@ -28,41 +31,16 @@ public class GenerateXML {
 		
 		root.cp = new ControlPoint(f, start, end);
 		System.out.println(root.toString());
-		createXML1(f, start, end, root);
-		iterateTree(root);
+		createXML(f, 0, f.yActualVal.length - 1, root);
+
 		
 		
 	}
 	
-	public void createXML(Function f, int start, int end) {
-		ControlPoint cp = new ControlPoint(f, start, end);
-
-//		cp.getValuesOfCurve();
-		String points;
-		int e = cp.getErrorIndex(f);
-//		System.out.println("e = " + e);
-		points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[start], functionArrY[start], cp.v1.x, cp.v1.y, cp.v2.x, cp.v2.y, functionArrX[end], functionArrY[end]);
-//		System.out.println("RECURSIVE CALL!");
-		if(cp.maxError > 1 ) {
-			createXML(f, start, start + e);
-//			System.out.println("left size = " + e);
-			createXML(f, start + e, end);
-//			System.out.println("subarray start = " + start  + " end  = " + end);
-		}else {
-			if(cp.v1.x == Double.NaN || cp.v1.y == Double.NaN || cp.v2.x == Double.NaN || cp.v2.y == Double.NaN){
-//				System.out.println("one or more of the points was NaN");
-				points = String.format(Locale.US,"M %.2f,%.2f L %.2f,%.2f",  functionArrX[start], functionArrY[start], functionArrX[end], functionArrY[end]);
-				
-
-			}
-			svg.append(points);
-//			System.out.println(points);
-		}
-	}
 	
 	
 	
-	public void createXML1(Function f, int start, int end, Node node) {
+	public void createXML(Function f, int start, int end, Node node) {
 		
 		node.cp = new ControlPoint(f, start, end);
 		
@@ -74,38 +52,84 @@ public class GenerateXML {
 			Node left = new Node();
 			node.left  = left;
 			
-			createXML1(f, start, start + e, node.left);
+			createXML(f, start, start + e, node.left);
 			
 			Node right = new Node();
 			node.right = right;
-			createXML1(f, start + e, end, node.right);
+			createXML(f, start + e, end, node.right);
+		}else {
+	//		setMiddleToZero(node);
+//			points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[start], functionArrY[start], node.cp.v1.x, node.cp.v1.y, node.cp.v2.x, node.cp.v2.y, functionArrX[end], functionArrY[end]);
+//			svg.append(points);
 		}
 
 	}
 	
-	
 
 	
-	public void setMiddleToZero(Node node) {
-		if(node.left != null && node.right != null && (node.left.cp.end - node.left.cp.start <= 5) && (node.right.cp.end - node.right.cp.start) <= 5) {
-			Vector leftV2 = node.left.cp.v2;
-			Vector leftV3 = node.left.cp.v3;
-			double dXl = leftV2.x - leftV3.x;
-			double dYl = leftV2.y - leftV3.y;
-			double distL = Math.sqrt(Math.pow(dXl, 2) + Math.pow(dYl, 2));
-			Vector t1 = new Vector((-1) * distL, 0);
-			node.left.cp.v2 = Vector.add2Vectors(node.left.cp.v3, t1);
+	//ADD TO ARRAY LIST DURING THE CREATION OF SUBCURVES IN createXML1() method!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NOT here
+	public void iterate(Node node) {
+
+
+		if(node != null) {
 			
-			Vector rightV1 = node.right.cp.v1;
-			Vector rightV0 = node.right.cp.v0;
-			double dXr = rightV1.x - rightV0.x;
-			double dYr = rightV1.y - rightV0.y;
-			double distR = Math.sqrt(Math.pow(dXr, 2) + Math.pow(dYr, 2));
-			Vector t2 = new Vector(distR, 0);
-			node.right.cp.v1 = Vector.add2Vectors(node.right.cp.v0, t2);
+			if(node.left == null && node.right == null) {
+				
+				String points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[node.cp.start], functionArrY[node.cp.start], node.cp.v1.x, node.cp.v1.y, node.cp.v2.x, node.cp.v2.y, functionArrX[node.cp.end], functionArrY[node.cp.end]);
+
+				controlPoints.add(node.cp);
+				
+			//	svg.append(points);
+			}
+	//		System.out.println(String.format(Locale.US,"\t  M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[node.cp.start], functionArrY[node.cp.start], node.cp.v1.x, node.cp.v1.y, node.cp.v2.x, node.cp.v2.y, functionArrX[node.cp.end], functionArrY[node.cp.end]));
+			
+		}
+		if(node.left != null) {
+			iterate(node.left);
+		}
+		if(node.right != null) {
+			iterate(node.right);
+		}
+	}
+	
+	public void continuityConstraintG1() {
+		int size = controlPoints.size();
+		int counter = 0;
+		
+		
+		for(ControlPoint cp: controlPoints) {
+			
+			
+			if(counter + 1 < size && counter > 0) {
+				Vector t = Vector.subtract2Vectors(cp.v0, cp.v3);
+
+				double distCurr = Vector.vecMagnitude(t);
+				ControlPoint nextCP = controlPoints.get(counter + 1);
+				ControlPoint lastCP = controlPoints.get(counter - 1);
+				double distNext = nextCP.getMagnitude();
+				
+				if(distCurr <= 20 && distNext <= 20) {
+					cp.setV1fromPrev(lastCP);
+
+				}
+				if(distCurr <=20 && distNext > 20) {
+
+					cp.setV1fromPrev(lastCP);
+					cp.setV2fromNext(nextCP);
+
+				}
+			}
+			
+			String points = String.format(Locale.US,"M %.2f,%.2f C %.2f,%.2f %.2f,%.2f %.2f,%.2f",  functionArrX[cp.start], functionArrY[cp.start], cp.v1.x, cp.v1.y, cp.v2.x, cp.v2.y, functionArrX[cp.end], functionArrY[cp.end]);
+			counter ++;
+			
+			svg.append(points);
+
 			
 			
 		}
 	}
+	
+	
 	
 }
